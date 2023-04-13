@@ -21,7 +21,6 @@ export const Schemas = {
             username: Joi.string().required(),
             password: Joi.string().required(),
             name: Joi.string().required(),
-            user_type: Joi.string().required()
         })
     },
 }

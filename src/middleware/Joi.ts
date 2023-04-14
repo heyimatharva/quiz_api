@@ -21,6 +21,10 @@ export const Schemas = {
             username: Joi.string().required(),
             password: Joi.string().required(),
             name: Joi.string().required(),
-        })
+        }),
+        login: Joi.object<IUser>({
+            username: Joi.string().required(),
+            password: Joi.string().required(),
+        }),
     },
 }

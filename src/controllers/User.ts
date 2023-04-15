@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import User from '../models/User';
 import bcrypt from 'bcrypt';
 import Logging from '../library/Logging';
+import createToken from '../library/createToeken';
 
 const checkUser = async (req: Request, res: Response, next: NextFunction) => {
     const { username, password } = req.body;
@@ -17,9 +18,21 @@ const checkUser = async (req: Request, res: Response, next: NextFunction) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        return res.status(200).json({ message: 'Login successful!' });
+        // Generate and return session token
+        const token = createToken(user.username)
+
+        console.log(token);
+        return res.status(200).json({ message: 'Login successful!', user: user.username, token });
     } catch (error) {
         return res.status(500).json({ message: 'Failed to check user' });
+    }
+};
+
+const logout = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        return res.status(200).json({ message: 'Logout successful!' });
+    } catch (error) {
+        return res.status(500).json({ message: 'Failed to logout user' });
     }
 };
 
@@ -69,4 +82,4 @@ const userExist = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-export default { createUser, checkUser, userExist };
+export default { createUser, checkUser, userExist, logout };

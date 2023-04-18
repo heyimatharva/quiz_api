@@ -3,9 +3,9 @@ import mongoose from 'mongoose';
 import User from '../models/User';
 import bcrypt from 'bcrypt';
 import Logging from '../library/Logging';
-import createToken from '../library/createToeken';
+import { createToken } from '../library/Token';
 
-const checkUser = async (req: Request, res: Response, next: NextFunction) => {
+const login = async (req: Request, res: Response, next: NextFunction) => {
     const { username, password } = req.body;
 
     try {
@@ -19,9 +19,8 @@ const checkUser = async (req: Request, res: Response, next: NextFunction) => {
         }
 
         // Generate and return session token
-        const token = createToken(user.username)
+        const token = createToken(user.username);
 
-        console.log(token);
         return res.status(200).json({ message: 'Login successful!', user: user.username, token });
     } catch (error) {
         return res.status(500).json({ message: 'Failed to check user' });
@@ -63,8 +62,7 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-
-const userExist = async (req: Request, res: Response, next: NextFunction) => {
+const usernameExist = async (req: Request, res: Response, next: NextFunction) => {
     const username = req.params.username;
 
     try {
@@ -77,9 +75,9 @@ const userExist = async (req: Request, res: Response, next: NextFunction) => {
         }
     } catch (error) {
         Logging.error(error);
-        
+
         return res.status(500).json({ message: 'Something went wrong' });
     }
 };
 
-export default { createUser, checkUser, userExist, logout };
+export default { createUser, login, usernameExist, logout };

@@ -1,6 +1,7 @@
 import Joi, {ObjectSchema} from "joi";
 import { Request, Response, NextFunction } from "express";
 import { IUser } from "../models/User";
+import { IQuiz } from "../models/Quiz";
 import Logging from "../library/Logging";
 
 export const ValidateJoi = (schema: ObjectSchema) => {
@@ -27,4 +28,12 @@ export const Schemas = {
             password: Joi.string().required(),
         }),
     },
+    quiz: {
+        create: Joi.object<IQuiz>({
+            name: Joi.string().required(),
+            description: Joi.string(),
+            datetime: Joi.string().required(),
+            user: Joi.string().required(),
+        }),
+    }
 }

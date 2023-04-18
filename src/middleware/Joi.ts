@@ -33,7 +33,11 @@ export const Schemas = {
             name: Joi.string().required(),
             description: Joi.string(),
             datetime: Joi.string().required(),
-            user: Joi.string().required(),
+        }),
+        upadate: Joi.object<IQuiz>({
+            name: Joi.string(),
+            description: Joi.string(),
+            datetime: Joi.string(),
         }),
     }
 }

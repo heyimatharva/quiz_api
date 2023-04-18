@@ -11,7 +11,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = await User.findOne({ username });
         if (!user) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+            return res.status(400).json({ message: 'Invalid credentials'});
         }
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
@@ -21,7 +21,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
         // Generate and return session token
         const token = createToken(user.username);
 
-        return res.status(200).json({ message: 'Login successful!', user: user.username, token });
+        return res.status(200).json({ message: 'Login successful!', user, token });
     } catch (error) {
         return res.status(500).json({ message: 'Failed to check user' });
     }

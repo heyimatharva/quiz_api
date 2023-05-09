@@ -5,6 +5,7 @@ import { config } from "./config/config";
 import Logging from "./library/Logging";
 import userRoutes from "./routes/User"
 import quizRoutes from "./routes/Quiz"
+import questionRoutes from "./routes/Question"
 
 const router = express();
 
@@ -54,6 +55,7 @@ const StartServer = () => {
     // Routes
     router.use("/users", userRoutes);
     router.use("/quizzes", quizRoutes);
+    router.use("/questions", questionRoutes);
 
     // healthcheck
     router.get('/ping', (req, res, next) => res.status(200).json({ hello: 'world' }));

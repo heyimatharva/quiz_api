@@ -22,22 +22,43 @@ export const Schemas = {
             username: Joi.string().required(),
             password: Joi.string().required(),
             name: Joi.string().required(),
+            email: Joi.string().required(),
         }),
         login: Joi.object<IUser>({
             username: Joi.string().required(),
             password: Joi.string().required(),
         }),
+        checkEmail: Joi.object<IUser>({
+            email: Joi.string().required(),
+        }),
+        resendVerificationEmail: Joi.object<IUser>({
+            email: Joi.string().required(),
+        }),
     },
     quiz: {
         create: Joi.object<IQuiz>({
             name: Joi.string().required(),
-            description: Joi.string(),
             datetime: Joi.string().required(),
+            description: Joi.string().empty(''),
         }),
         upadate: Joi.object<IQuiz>({
             name: Joi.string(),
             description: Joi.string(),
             datetime: Joi.string(),
         }),
-    }
+    },
+    question: {
+        create: Joi.object({
+            question: Joi.string().required(),
+            options: Joi.array().items(Joi.string()).required().length(4),
+            answer: Joi.string().required(),
+            quizId: Joi.string().required(),
+            marks: Joi.number().empty('').default(2),
+        }),
+        update: Joi.object({
+            question: Joi.string().required(),
+            options: Joi.array().items(Joi.string()).required().length(4),
+            answer: Joi.string().required(),
+        }),
+    },
 }

@@ -13,7 +13,11 @@ function createToken(username: string) {
         throw new Error('JWT_SECRET is not defined!');
     }
 
-    const token = jwt.sign({ username }, JWT_SECRET);
+    if(!username) {
+        throw new Error('Username is not defined!');
+    }
+
+    const token = jwt.sign({ username }, JWT_SECRET) as string;
     return token;
 }
 
@@ -26,7 +30,7 @@ function verifyToken(token: string) {
         const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
         return decoded;
     } catch (error) {
-        throw new Error('Invalid token');
+        return { username: '' } as DecodedToken;
     }
 }
 

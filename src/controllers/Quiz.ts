@@ -3,6 +3,9 @@ import mongoose from 'mongoose';
 import Quiz from '../models/Quiz';
 import User from '../models/User';
 import { verifyToken } from '../library/Token';
+import shortid from 'shortid';
+import Question from '../models/Question';
+import Logging from '../library/Logging';
 
 const createQuiz = async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
@@ -10,9 +13,18 @@ const createQuiz = async (req: Request, res: Response, next: NextFunction) => {
         const token = authHeader.split(' ')[1];
         try {
             const decoded_user = verifyToken(token);
-            const { name, description = null, datetime: dateString } = req.body;
+            const { name, description = '', datetime: dateString } = req.body;
             const datetime = new Date(dateString);
             const user = await User.findOne({ username: decoded_user.username });
+
+            // ensure that duplicate quizId is not generated
+            let quizId = shortid.generate();
+            let quizExists = await Quiz.findOne({ quizId });
+
+            while (quizExists) {
+                quizId = shortid.generate();
+                quizExists = await Quiz.findOne({ quizId });
+            }
 
             if (user) {
                 const quiz = new Quiz({
@@ -20,10 +32,11 @@ const createQuiz = async (req: Request, res: Response, next: NextFunction) => {
                     name,
                     description,
                     datetime,
-                    user: user._id
+                    user: user._id,
+                    quizId
                 });
                 const savedQuiz = await quiz.save();
-                return res.status(201).json({ quiz: savedQuiz });
+                return res.status(201).json({ quiz: { name: savedQuiz.name, quizId: savedQuiz.quizId } });
             } else {
                 return res.status(404).json({ message: 'User not found' });
             }
@@ -39,17 +52,28 @@ const getQuiz = async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
     if (authHeader) {
         try {
-            const quiz_id = req.params.id;
+            const quizId = req.params.id;
             const token = authHeader.split(' ')[1];
-            verifyToken(token);
+            const decoded_user = verifyToken(token);
+            const user = await User.findOne({ username: decoded_user.username });
 
-            const quiz = await Quiz.findById(quiz_id);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            const quiz = await Quiz.findOne({ quizId });
             if (quiz) {
-                return res.status(200).json({ quiz });
+                if (!quiz.user.equals(user._id)) {
+                    return res.status(401).json({ message: 'Unauthorized' });
+                }
+
+                const questions = await Question.find({ quizId });
+                return res.status(200).json({ quiz: { name: quiz.name, quizId: quiz.quizId, questions } });
             } else {
                 return res.status(404).json({ message: 'Quiz not found' });
             }
         } catch (error) {
+            Logging.error(error);
             return res.status(401).json({ message: 'Invalid token' });
         }
     } else {
@@ -63,7 +87,7 @@ const updateQuiz = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const token = authHeader.split(' ')[1];
             const user = verifyToken(token);
-            if (user) {
+            if (user.username != '') {
                 const quiz_id = req.params.id;
                 const old_quiz = await Quiz.findById(quiz_id);
                 const user_object = await User.findOne({ username: user.username });
@@ -94,7 +118,7 @@ const deleteQuiz = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const token = authHeader.split(' ')[1];
             const user = verifyToken(token);
-            if (user) {
+            if (user.username != '') {
                 const quiz_id = req.params.id.toString();
 
                 const old_quiz = await Quiz.findById(quiz_id);
@@ -121,4 +145,27 @@ const deleteQuiz = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-export default { createQuiz, getQuiz, updateQuiz, deleteQuiz };
+const getUserQuizes = async (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        try {
+            const token = authHeader.split(' ')[1];
+            const user = verifyToken(token);
+            if (user.username != '') {
+                const user_object = await User.findOne({ username: user.username });
+                if (user_object) {
+                    const quizes = await Quiz.find({ user: user_object._id });
+                    res.status(200).json({ quizes });
+                } else {
+                    res.status(404).json({ message: 'User not found' });
+                }
+            }
+        } catch (error) {
+            res.status(401).json({ message: 'Invalid token' });
+        }
+    } else {
+        return res.status(401).json({ message: 'Missing authorization header' });
+    }
+};
+
+export default { createQuiz, getQuiz, updateQuiz, deleteQuiz, getUserQuizes };
